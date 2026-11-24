@@ -7,7 +7,7 @@
 // Run locally:
 //   mkdir -p out && MAKEFUN_BOT_DIR=. MAKEFUN_OUTPUT_DIR=out node main.ts
 
-import { copyFileSync, mkdirSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const BOT_DIR = process.env.MAKEFUN_BOT_DIR ?? '/bot';
@@ -15,7 +15,12 @@ const OUTPUT_DIR = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
 mkdirSync(OUTPUT_DIR, { recursive: true });
 try {
+  const video = JSON.parse(readFileSync(join(BOT_DIR, 'VIDEO.json'), 'utf8')) as { url?: unknown };
+  if (typeof video.url !== 'string' || !video.url.startsWith('https://www.tiktok.com/')) {
+    throw new Error('VIDEO.json has no valid TikTok video url');
+  }
   copyFileSync(join(BOT_DIR, 'VIDEO.json'), join(OUTPUT_DIR, 'VIDEO.json'));
+  console.log(`entry video: ${video.url}`);
 } catch (err) {
   console.error(`could not copy VIDEO.json from ${BOT_DIR}: ${(err as Error).message}`);
   process.exit(1);
